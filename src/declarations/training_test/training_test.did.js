@@ -12,6 +12,12 @@ export const idlFactory = ({ IDL }) => {
     'NotAuthorized' : IDL.Null,
   });
   const Result = IDL.Variant({ 'ok' : IDL.Null, 'err' : Error });
-  return IDL.Service({ 'createUser' : IDL.Func([User], [Result], []) });
+  const Result_1 = IDL.Variant({ 'ok' : User, 'err' : Error });
+  return IDL.Service({
+    'createUser' : IDL.Func([User], [Result], []),
+    'deleteUser' : IDL.Func([], [Result], []),
+    'readUser' : IDL.Func([], [Result_1], []),
+    'updateUser' : IDL.Func([User], [Result], []),
+  });
 };
 export const init = ({ IDL }) => { return []; };

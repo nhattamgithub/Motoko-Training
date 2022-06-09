@@ -6,6 +6,11 @@ type User =
    updated_at: opt int;
    username: text;
  };
+type Result_1 = 
+ variant {
+   err: Error;
+   ok: User;
+ };
 type Result = 
  variant {
    err: Error;
@@ -19,4 +24,7 @@ type Error =
  };
 service : {
   createUser: (User) -> (Result);
+  deleteUser: () -> (Result);
+  readUser: () -> (Result_1);
+  updateUser: (User) -> (Result);
 }
