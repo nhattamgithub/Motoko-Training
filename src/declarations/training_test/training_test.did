@@ -1,0 +1,22 @@
+type User = 
+ record {
+   created_at: opt int;
+   email: text;
+   phone_number: text;
+   updated_at: opt int;
+   username: text;
+ };
+type Result = 
+ variant {
+   err: Error;
+   ok;
+ };
+type Error = 
+ variant {
+   AlreadyExisting;
+   NotAuthorized;
+   NotFound;
+ };
+service : {
+  createUser: (User) -> (Result);
+}
