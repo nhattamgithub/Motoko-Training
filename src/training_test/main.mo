@@ -7,7 +7,6 @@ import Type "../training_test_models/Types";
 actor {
 
   type User = Type.User;
-  type Post = Type.Post;
   type Bio = Type.Bio;
 
   type UserUpdate = {
