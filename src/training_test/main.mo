@@ -251,7 +251,7 @@ actor {
           #err(#AlreadyActivePost);
         }
         else {
-           //Deactive all post
+           //Deactive another post
           for ((key, value) in state.posts.entries()){
             if (key == id){
               let updatePost : Type.Post = {
