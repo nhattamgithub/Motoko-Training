@@ -1,0 +1,78 @@
+type User = 
+ record {
+   bio: Bio__1;
+   created_at: int;
+   updated_at: opt int;
+ };
+type Result_3 = 
+ variant {
+   err: Error;
+   ok: bool;
+ };
+type Result_2 = 
+ variant {
+   err: Error;
+   ok: Post;
+ };
+type Result_1 = 
+ variant {
+   err: Error;
+   ok: User;
+ };
+type Result = 
+ variant {
+   err: Error;
+   ok;
+ };
+type PostInfo__1 = 
+ record {
+   body: text;
+   title: opt text;
+ };
+type PostInfo = 
+ record {
+   body: text;
+   title: opt text;
+ };
+type Post = 
+ record {
+   active: bool;
+   author: principal;
+   created_at: int;
+   post_info: PostInfo__1;
+   updated_at: int;
+ };
+type Error = 
+ variant {
+   NotAuthorized;
+   PostAlreadyExists;
+   PostNotFound;
+   UserAlreadyExists;
+   UserNotFound;
+ };
+type Bio__1 = 
+ record {
+   email: opt text;
+   phone_number: opt text;
+   username: opt text;
+ };
+type Bio = 
+ record {
+   email: opt text;
+   phone_number: opt text;
+   username: opt text;
+ };
+service : {
+  activePost: (nat) -> (Result);
+  checkActivePost: (nat) -> (Result_3);
+  createPost: (PostInfo) -> (Result);
+  createUser: (Bio) -> (Result);
+  deletePost: (nat) -> (Result);
+  deleteUser: () -> (Result);
+  listPost: () -> (vec Post);
+  listUsers: () -> (vec User);
+  readPost: (nat) -> (Result_2);
+  readUser: () -> (Result_1);
+  updatePost: (nat, PostInfo) -> (Result);
+  updateUser: (Bio) -> (Result);
+}
