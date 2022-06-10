@@ -11,6 +11,9 @@ import Trie "mo:base/AssocList";
 import TrieMap "mo:base/TrieMap";
 import Type "../training_test_models/Types";
 import Types "../training_test_models/Types";
+import Nat "mo:base/Nat";
+import Hash "mo:base/Hash";
+import Array "mo:base/Array";
 
 actor {
   var state : State.State = State.empty();
@@ -228,8 +231,11 @@ actor {
 
   //Active post
   //Dang hoat dong len active --> true
-  public shared(msg) func active_post(id : Nat) : async Result.Result<(), Types.Error>{
+  public shared(msg) func activePost(id : Nat) : async Result.Result<(), Types.Error>{
     let callerID = msg.caller;
+    if (Principal.toText(callerID) == "2vxsx-fae") {
+      return #err(#NotAuthorized);
+    };
 
     let readPost = state.posts.get(id);
 
@@ -237,42 +243,117 @@ actor {
       case (null) {
         #err(#NotFound);
       };
-      case (?value) {
-        let check_active = value.active;
+      case (?v) { //post exist
+
+        let check_active = v.active;
 
         if (check_active == true){
-          #err( #AlreadyActivePost);
+          #err(#AlreadyActivePost);
         }
         else {
-          let updatePost : Type.Post = {
-          title = value.title;
-          body = value.body;
-          author = value.author;
-          active = true;
-          created_at : ?Int = Option.get(null, ?Time.now());
-          updated_at : ?Int = Option.get(null, ?Time.now());
+           //Deactive all post
+          for ((key, value) in state.posts.entries()){
+            if (key == id){
+              let updatePost : Type.Post = {
+              title = value.title;
+              body = value.body;
+              author = value.author;
+              active = true;
+              created_at : ?Int = Option.get(null, ?Time.now());
+              updated_at : ?Int = Option.get(null, ?Time.now());
+              };
+              let result_update = state.posts.replace(id, updatePost);
+            }
+            else {
+              let updatePost : Type.Post = {
+              title = value.title;
+              body = value.body;
+              author = value.author;
+              active = false;
+              created_at : ?Int = Option.get(null, ?Time.now());
+              updated_at : ?Int = Option.get(null, ?Time.now());
+              };
+              let result_update = state.posts.replace(key, updatePost);
+            }
           };
-          let result_update = state.posts.replace(id, updatePost);
           #ok();
         };
       };
     };
   };
 
-  //check active 
-  //kiem tra bai dang co hoat dong
-  public shared(msg) func check_active(id : Nat) : async Bool{
+  // check active 
+  // kiem tra bai dang co hoat dong
+  public shared(msg) func checkActivePost(id_post: Nat) : async Result.Result<Bool, Type.Error>{
     let callerID = msg.caller;
 
-    let readPost = state.posts.get(id);
-
-    switch(readPost) {
-      case (null) {
-        return false;
+    let result = state.posts.get(id_post);
+    switch (result){
+      case(null){
+        #err(#NotFound);
       };
       case(?value){
-        return value.active == true;
+        #ok(value.active == true);
       };
     };
+  };
+
+  //List user -> [users]
+  public shared(msg) func listUser() : async Result.Result<[Types.User], Types.Error>{
+    let callerID = msg.caller;
+    if (Principal.toText(callerID) == "2vxsx-fae") {
+      return #err(#NotAuthorized);
+    };
+
+    let user_null : Types.User = {
+      username = "";
+      email = "";
+      phone_number = "";
+      created_at = null;
+      updated_at = null;
+    };
+
+    let list_user : [var Types.User] = Array.init<Types.User>(state.users.size(), user_null);
+
+    var index : Nat = 0;
+    for (value in state.users.vals()){ 
+      list_user[index] := value;
+      index += 1;
+    };
+    #ok(Array.freeze<Types.User>(list_user));
+  };
+
+  //List post -> [posts]
+  public shared(msg) func listPost() : async Result.Result<[Types.Post], Types.Error>{
+    let callerID = msg.caller;
+    if (Principal.toText(callerID) == "2vxsx-fae") {
+      return #err(#NotAuthorized);
+    };
+
+    let user_null : Types.User = {
+      username = "";
+      email = "";
+      phone_number = "";
+      created_at = null;
+      updated_at = null;
+    };
+
+    let post_null : Types.Post = {
+      title = ?"toi la KhA";
+      body = null;
+      author = user_null;
+      active = false;
+      created_at = null;
+      updated_at = null;
+    };
+
+    let list_post : [var Types.Post] = Array.init<Types.Post>(state.posts.size(), post_null);
+
+    var index : Nat = 0;
+    for (value in state.posts.vals()){ 
+      list_post[index] := value;
+      index += 1;
+    };
+    #ok(Array.freeze<Types.Post>(list_post));
   };
 };

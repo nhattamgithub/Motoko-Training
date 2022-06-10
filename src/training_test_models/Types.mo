@@ -10,7 +10,7 @@ module {
   public type Post = {
     title : ?Text;
     body : ?Text;
-    author : ?User;
+    author : User;
     active : Bool;
     created_at : ?Int;
     updated_at : ?Int;
