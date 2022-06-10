@@ -286,6 +286,9 @@ actor {
   // kiem tra bai dang co hoat dong
   public shared(msg) func checkActivePost(id_post: Nat) : async Result.Result<Bool, Type.Error>{
     let callerID = msg.caller;
+    if (Principal.toText(callerID) == "2vxsx-fae") {
+      return #err(#NotAuthorized);
+    };
 
     let result = state.posts.get(id_post);
     switch (result){
@@ -339,7 +342,7 @@ actor {
     };
 
     let post_null : Types.Post = {
-      title = ?"toi la KhA";
+      title = null;
       body = null;
       author = user_null;
       active = false;
