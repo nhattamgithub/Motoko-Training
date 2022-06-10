@@ -261,28 +261,30 @@ actor Users {
                 {
                     return #err(#NotAuthorized);
                 };
-                for (x in state.posts.keys())
+                for (x in state.posts.entries())
                 {
-                    if (x == id)
+                    let postid = x.0;
+                    let post = x.1;
+                    if (postid == id)
                     {
                         let p: Post = {
-                            info = v.info;
+                            info = post.info;
                             active = true;
-                            author = v.author;
-                            created_at = v.created_at;
-                            updated_at = v.updated_at;
+                            author = post.author;
+                            created_at = post.created_at;
+                            updated_at = post.updated_at;
                         };
                         let updatedpost = state.posts.replace(id,p);
                     } else
                     {
                         let p: Post = {
-                            info = v.info;
+                            info = post.info;
                             active = false;
-                            author = v.author;
-                            created_at = v.created_at;
-                            updated_at = v.updated_at;
+                            author = post.author;
+                            created_at = post.created_at;
+                            updated_at = post.updated_at;
                         };
-                        let updatedpost = state.posts.replace(x,p);
+                        let updatedpost = state.posts.replace(postid,p);
                     };
                     
                 };
