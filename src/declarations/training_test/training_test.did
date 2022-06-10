@@ -9,22 +9,21 @@ type User =
 type Result_1 = 
  variant {
    err: Error;
-   ok: User;
+   ok;
  };
 type Result = 
  variant {
    err: Error;
-   ok;
+   ok: User;
  };
 type Error = 
  variant {
+   AlreadyActivePost;
    AlreadyExisting;
    NotAuthorized;
    NotFound;
  };
 service : {
-  createUser: (User) -> (Result);
-  deleteUser: () -> (Result);
-  readUser: () -> (Result_1);
-  updateUser: (User) -> (Result);
+  createUser: (User) -> (Result_1);
+  readUser: () -> (Result);
 }

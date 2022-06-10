@@ -1,10 +1,11 @@
 import type { Principal } from '@dfinity/principal';
 export type Error = { 'AlreadyExisting' : null } |
+  { 'AlreadyActivePost' : null } |
   { 'NotFound' : null } |
   { 'NotAuthorized' : null };
-export type Result = { 'ok' : null } |
+export type Result = { 'ok' : User } |
   { 'err' : Error };
-export type Result_1 = { 'ok' : User } |
+export type Result_1 = { 'ok' : null } |
   { 'err' : Error };
 export interface User {
   'updated_at' : [] | [bigint],
@@ -14,8 +15,6 @@ export interface User {
   'phone_number' : string,
 }
 export interface _SERVICE {
-  'createUser' : (arg_0: User) => Promise<Result>,
-  'deleteUser' : () => Promise<Result>,
-  'readUser' : () => Promise<Result_1>,
-  'updateUser' : (arg_0: User) => Promise<Result>,
+  'createUser' : (arg_0: User) => Promise<Result_1>,
+  'readUser' : () => Promise<Result>,
 }

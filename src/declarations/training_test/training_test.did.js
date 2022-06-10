@@ -8,16 +8,15 @@ export const idlFactory = ({ IDL }) => {
   });
   const Error = IDL.Variant({
     'AlreadyExisting' : IDL.Null,
+    'AlreadyActivePost' : IDL.Null,
     'NotFound' : IDL.Null,
     'NotAuthorized' : IDL.Null,
   });
-  const Result = IDL.Variant({ 'ok' : IDL.Null, 'err' : Error });
-  const Result_1 = IDL.Variant({ 'ok' : User, 'err' : Error });
+  const Result_1 = IDL.Variant({ 'ok' : IDL.Null, 'err' : Error });
+  const Result = IDL.Variant({ 'ok' : User, 'err' : Error });
   return IDL.Service({
-    'createUser' : IDL.Func([User], [Result], []),
-    'deleteUser' : IDL.Func([], [Result], []),
-    'readUser' : IDL.Func([], [Result_1], []),
-    'updateUser' : IDL.Func([User], [Result], []),
+    'createUser' : IDL.Func([User], [Result_1], []),
+    'readUser' : IDL.Func([], [Result], []),
   });
 };
 export const init = ({ IDL }) => { return []; };
