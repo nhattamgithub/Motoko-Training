@@ -6,6 +6,7 @@ module {
     };
 
     public type User = {
+        id : Principal;
         bio : Bio;
         created_at : Int;
         updated_at : ?Int;
@@ -25,7 +26,7 @@ module {
     };
 
     public type Post = {
-        author : Principal;
+        author : Nat;
         active : Bool;
         post_info : PostInfo;        
         created_at : Int;
