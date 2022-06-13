@@ -1,6 +1,6 @@
 module {
     public type Bio = {
-        username: ?Text;
+        username: Text;
         email: ?Text;
         phone_number: ?Text;
     };
@@ -9,7 +9,7 @@ module {
         bio: Bio;
         created_at: Int;
         updated_at: Int;
-        id: Principal;
+        callerid: Principal;
     };
 
     public type Post_Info = {
@@ -19,8 +19,8 @@ module {
 
     public type Post = {
         info: Post_Info;
+        author: Nat; // use User id
         active: Bool;
-        author: Principal; // use Username ID
         created_at: Int;
         updated_at: Int;
     };

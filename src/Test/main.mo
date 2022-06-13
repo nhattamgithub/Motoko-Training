@@ -5,12 +5,13 @@ import Hash "mo:base/Hash";
 import Nat "mo:base/Nat";
 import Time "mo:base/Time";
 import Iter "mo:base/Iter";
+
 import Principal "mo:base/Principal";
 
 import Types "../Test_models/Types";
 import State "../Test_models/State";
 
-actor Users {
+actor Main {
     type Bio = Types.Bio;
     type User = Types.User;
     type Post_Info = Types.Post_Info;
@@ -24,23 +25,25 @@ actor Users {
     // Users functions____________________________________________________________________________
     public shared(msg) func createUser(b: Bio) : async Result.Result<(),Error> {
         let callerid = msg.caller;
-        // Reject Anonymous Identity 
+        //Reject Anonymous Identity 
         if (Principal.toText(callerid) == "2vxsx-fae")
         {
             return #err(#NotAuthorized);
         };
 
-        let readuser = state.users.get(callerid);
-        switch (readuser)
+        let readuserid = findUserwithBio(b);
+        switch (readuserid)
         {
             case null {
+                let userid = state.user_counter;
                  let u : User = {
                     bio = b;
                     created_at = Time.now();
                     updated_at = Time.now();
-                    id = callerid;
+                    callerid = callerid;
                 };
-                let createduser = state.users.put(callerid,u); 
+                let createduser = state.users.put(userid,u);
+                state := State.increase_userCounter(state);
                 #ok(());
             };
             case (? v)
@@ -51,141 +54,139 @@ actor Users {
 
     };
 
-    public shared(msg) func readUser() : async Result.Result<User,Error> {
+    public shared(msg) func readUser(id: Nat) : async Result.Result<User,Error> {
         let callerid = msg.caller;
-		// Reject Anonymous Identity 
-        if (Principal.toText(callerid) == "2vxsx-fae")
-        {
-            return #err(#NotAuthorized);
-        };
 
-        let result = state.users.get(callerid);
+        let result = state.users.get(id);
         return Result.fromOption(result,#UserNotFound);
     };
 
-    public shared(msg) func updateUser(b: Bio) : async Result.Result<(),Error> {
+    public shared(msg) func updateUser(id: Nat,b: Bio) : async Result.Result<(),Error> {
         let callerid = msg.caller;
-		// Reject Anonymous Identity 
+		//Reject Anonymous Identity 
         if (Principal.toText(callerid) == "2vxsx-fae")
         {
             return #err(#NotAuthorized);
         };
 
-        let result = state.users.get(callerid);
+
+        let result = state.users.get(id);
         switch (result)
         {
             case null {
                 #err(#UserNotFound);
             };
             case (? v) {
+                if (v.callerid != callerid)
+                {
+                    return #err(#NotAuthorized);
+                };
+                let readuserid = findUserwithBio(b);
+                if (readuserid != null and v.bio.username != b.username)
+                {
+                    return #err(#UserAlreadyExists);
+                };
                 let u : User = {
                     bio = b;
                     created_at = v.created_at;
                     updated_at = Time.now();
-                    id = v.id;
+                    callerid = v.callerid;
                 };
-                let updateduser = state.users.replace(callerid,u);
+                let updateduser = state.users.replace(id,u);
                 #ok(());
             };
         };
     };
 
-    public shared(msg) func deleteUser() : async Result.Result<(),Error> {
+    public shared(msg) func deleteUser(id: Nat) : async Result.Result<(),Error> {
         let callerid = msg.caller;
-        // Reject Anonymous Identity 
+        //Reject Anonymous Identity 
         if (Principal.toText(callerid) == "2vxsx-fae")
         {
             return #err(#NotAuthorized);
         };
 
-
-        let result = state.users.get(callerid);
+        let result = state.users.get(id);
         switch (result)
         {
             case null {
                 #err(#UserNotFound);
             };
             case (? v) {
-                 let deletedduser = state.users.remove(callerid);
+                if (v.callerid != callerid)
+                {
+                    return #err(#NotAuthorized);
+                };
+                let deletedduser = state.users.remove(id);
                 #ok(());
             };
         };
     };
 
-    // // Posts functions____________________________________________________________________________
-    public shared(msg) func createPost(i: Post_Info) : async Result.Result<(),Error> {
-        // if user havent created, throw error
+    // Posts functions____________________________________________________________________________
+    public shared(msg) func createPost(author: Nat,i: Post_Info) : async Result.Result<(),Error> {
         let callerid = msg.caller;
-		// Reject Anonymous Identity 
+		//Reject Anonymous Identity 
         if (Principal.toText(callerid) == "2vxsx-fae")
         {
             return #err(#NotAuthorized);
         };
 
-		
-        let result = state.users.get(callerid);
-        if (result == null)
+        let result = state.users.get(author);
+        switch (result)
         {
-            return #err(#UserNotFound);
-        };
-
-        //create a post
-        let id = state.post_id_counter;
-        state := State.increase_postCounter(state);
-
-        let readpost = state.posts.get(id);
-        switch (readpost)
-        {
-            case null 
-            {
-                let p : Post = {
-                    info = i;
-                    active = false;
-                    author = callerid;
-                    created_at = Time.now();
-                    updated_at = Time.now();
+            // if user havent created, throw error
+            case null {
+                #err(#UserNotFound);
+            };
+            case (? u) {
+                let id = state.post_id_counter;
+                let readpost = state.posts.get(id);
+                switch (readpost)
+                {
+                    //create a post only if the caller is the owner of the user id.
+                    case null 
+                    {
+                        if (u.callerid != callerid)
+                        {
+                            return #err(#NotAuthorized);
+                        };
+                        let p : Post = {
+                            info = i;
+                            active = false;
+                            author = author;
+                            created_at = Time.now();
+                            updated_at = Time.now();
+                        };
+                        state := State.increase_postCounter(state);
+                        let createpost = state.posts.put(id,p);
+                        #ok(());
+                    };
+                    case (? v)
+                    {
+                        #err(#PostAlreadyExists);
+                    };
                 };
-                let createpost = state.posts.put(id,p);
-                #ok(());
-            };
-            case (? v)
-            {
-                #err(#PostAlreadyExists);
             };
         };
-
     };
 
     public shared(msg) func readPost(id : Nat) : async Result.Result<Post,Error> {
+        let callerid = msg.caller;
+
         let result = state.posts.get(id);
-        switch (result)
-        {
-            case null 
-            {
-                #err(#PostNotFound);
-            };
-            case (? v)
-            {
-                // if post is unactive (active == False) and current user isn't the author of the post, throw error
-                if (v.active == false and msg.caller != v.author)
-                {
-                    return #err(#NotAuthorized);
-                }; 
-                #ok(v);
-            };
-        }
+        return Result.fromOption(result,#PostNotFound);
     };
 
     public shared(msg) func updatePost(id: Nat,i: Post_Info) : async Result.Result<(),Error> {
         let callerid = msg.caller;
-		// Reject Anonymous Identity 
+		//Reject Anonymous Identity 
         if (Principal.toText(callerid) == "2vxsx-fae")
         {
             return #err(#NotAuthorized);
         };
 
         let result = state.posts.get(id);
-
         switch (result)
         {
             case null {
@@ -193,34 +194,44 @@ actor Users {
             };
             case (? v) {
                 // if current user isnt the author of this post, throw error
-                if (v.author != callerid)
+                let readuser = state.users.get(v.author);
+                switch (readuser)
                 {
-                    return #err(#NotAuthorized);
+                    case (? u)
+                    {
+                        if (u.callerid != callerid)
+                        {
+                            return #err(#NotAuthorized);
+                        };
+                        let p : Post = {
+                            info = i;
+                            active = v.active;
+                            author = v.author;
+                            created_at = v.created_at;
+                            updated_at = Time.now();
+                        };
+                        let updatedpost = state.posts.replace(id,p);
+                        #ok(());
+                    };
+                    case null {
+                        #err(#UserNotFound);
+                    };
                 };
-                let p : Post = {
-                    info = i;
-                    active = v.active;
-                    author = v.author;
-                    created_at = v.created_at;
-                    updated_at = Time.now();
-                };
-                let updatedpost = state.posts.replace(id,p);
-                #ok(());
             };
         };
+    
     };
 
 
     public shared(msg) func deletePost(id: Nat) : async Result.Result<(),Error> {
         let callerid = msg.caller;
-		// Reject Anonymous Identity 
+		//Reject Anonymous Identity 
         if (Principal.toText(callerid) == "2vxsx-fae")
         {
             return #err(#NotAuthorized);
         };
 
         let result = state.posts.get(id);
-
         switch (result)
         {
             case null {
@@ -228,17 +239,39 @@ actor Users {
             };
             case (? v) {
                 // if current user isnt the author of this post, throw error
-                if (v.author != callerid)
+                let readuser = state.users.get(v.author);
+                switch (readuser)
                 {
-                    return #err(#NotAuthorized);
+                    case (? u)
+                    {
+                        if (u.callerid != callerid)
+                        {
+                            return #err(#NotAuthorized);
+                        };
+                        let updatedpost = state.posts.remove(id);
+                        #ok(());
+                    };
+                    case null {
+                        #err(#UserNotFound);
+                    };
                 };
-                let updatepost = state.posts.remove(id);
-                #ok(());
             };
         };
     };
    
-    // // Other functions____________________________________________________________________________
+//     // // Other functions____________________________________________________________________________
+    private func findUserwithBio(b: Bio) : ?Nat {
+        for (e in state.users.entries())
+        {
+            let k = e.0;
+            let u= e.1;
+            if (u.bio.username == b.username)
+            {
+                return ?k;
+            };
+        };
+        null;
+    };
 
     public shared(msg) func activePost(id: Nat) : async Result.Result<(),Error> {
         let callerid = msg.caller;
@@ -257,64 +290,59 @@ actor Users {
             };
             case (? v) {
                 // if current user isnt the author of this post, throw error
-                if (v.author != callerid)
+                let readuser = state.users.get(v.author);
+                switch (readuser)
                 {
-                    return #err(#NotAuthorized);
-                };
-                for (x in state.posts.entries())
-                {
-                    let postid = x.0;
-                    let post = x.1;
-                    if (postid == id)
-                    {
-                        let p: Post = {
-                            info = post.info;
-                            active = true;
-                            author = post.author;
-                            created_at = post.created_at;
-                            updated_at = post.updated_at;
+                    case (? u) {
+                        if (u.callerid != callerid)
+                        {
+                            return #err(#NotAuthorized);
                         };
-                        let updatedpost = state.posts.replace(id,p);
-                    } else
-                    {
-                        let p: Post = {
-                            info = post.info;
-                            active = false;
-                            author = post.author;
-                            created_at = post.created_at;
-                            updated_at = post.updated_at;
+                        for (x in state.posts.keys())
+                        {
+                            if (x == id)
+                            {
+                                let p: Post = {
+                                    info = v.info;
+                                    active = true;
+                                    author = v.author;
+                                    created_at = v.created_at;
+                                    updated_at = v.updated_at;
+                                };
+                                let updatedpost = state.posts.replace(id,p);
+                            } else
+                            {
+                                let p: Post = {
+                                    info = v.info;
+                                    active = false;
+                                    author = v.author;
+                                    created_at = v.created_at;
+                                    updated_at = v.updated_at;
+                                };
+                                let updatedpost = state.posts.replace(x,p);
+                            };
+                            
                         };
-                        let updatedpost = state.posts.replace(postid,p);
+                        
+                        #ok(());
                     };
-                    
-                };
+                    case null {
+                        #err(#UserNotFound);
+                    }
+                }
                 
-                #ok(());
             };
         };
     };
 
     public shared(msg) func checkActivePost(id: Nat) : async Result.Result<Bool,Error> {
-        let callerid = msg.caller;
-		// Reject Anonymous Identity 
-        if (Principal.toText(callerid) == "2vxsx-fae")
-        {
-            return #err(#NotAuthorized);
-        };
-
         let result = state.posts.get(id);
-
         switch (result)
         {
             case null {
                 #err(#PostNotFound);
             };
             case (? v) {
-                // if current user isnt the author of this post, throw error
-                if (v.author != callerid)
-                {
-                    return #err(#NotAuthorized);
-                };
                 #ok(v.active);
             };
         };
@@ -339,4 +367,4 @@ actor Users {
         P;
     };
 
-} 
+}

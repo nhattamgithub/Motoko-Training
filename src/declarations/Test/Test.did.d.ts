@@ -1,11 +1,11 @@
 import type { Principal } from '@dfinity/principal';
 export interface Bio {
-  'username' : [] | [string],
+  'username' : string,
   'email' : [] | [string],
   'phone_number' : [] | [string],
 }
 export interface Bio__1 {
-  'username' : [] | [string],
+  'username' : string,
   'email' : [] | [string],
   'phone_number' : [] | [string],
 }
@@ -19,7 +19,7 @@ export interface Post {
   'active' : boolean,
   'info' : Post_Info__1,
   'created_at' : bigint,
-  'author' : Principal,
+  'author' : bigint,
 }
 export interface Post_Info { 'title' : [] | [string], 'body' : string }
 export interface Post_Info__1 { 'title' : [] | [string], 'body' : string }
@@ -32,22 +32,22 @@ export type Result_2 = { 'ok' : Post } |
 export type Result_3 = { 'ok' : boolean } |
   { 'err' : Error };
 export interface User {
-  'id' : Principal,
   'bio' : Bio__1,
   'updated_at' : bigint,
   'created_at' : bigint,
+  'callerid' : Principal,
 }
 export interface _SERVICE {
   'activePost' : (arg_0: bigint) => Promise<Result>,
   'checkActivePost' : (arg_0: bigint) => Promise<Result_3>,
-  'createPost' : (arg_0: Post_Info) => Promise<Result>,
+  'createPost' : (arg_0: bigint, arg_1: Post_Info) => Promise<Result>,
   'createUser' : (arg_0: Bio) => Promise<Result>,
   'deletePost' : (arg_0: bigint) => Promise<Result>,
-  'deleteUser' : () => Promise<Result>,
+  'deleteUser' : (arg_0: bigint) => Promise<Result>,
   'listPosts' : () => Promise<Array<Post>>,
   'listUsers' : () => Promise<Array<User>>,
   'readPost' : (arg_0: bigint) => Promise<Result_2>,
-  'readUser' : () => Promise<Result_1>,
+  'readUser' : (arg_0: bigint) => Promise<Result_1>,
   'updatePost' : (arg_0: bigint, arg_1: Post_Info) => Promise<Result>,
-  'updateUser' : (arg_0: Bio) => Promise<Result>,
+  'updateUser' : (arg_0: bigint, arg_1: Bio) => Promise<Result>,
 }

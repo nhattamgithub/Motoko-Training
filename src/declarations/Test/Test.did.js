@@ -13,7 +13,7 @@ export const idlFactory = ({ IDL }) => {
     'body' : IDL.Text,
   });
   const Bio = IDL.Record({
-    'username' : IDL.Opt(IDL.Text),
+    'username' : IDL.Text,
     'email' : IDL.Opt(IDL.Text),
     'phone_number' : IDL.Opt(IDL.Text),
   });
@@ -26,34 +26,34 @@ export const idlFactory = ({ IDL }) => {
     'active' : IDL.Bool,
     'info' : Post_Info__1,
     'created_at' : IDL.Int,
-    'author' : IDL.Principal,
+    'author' : IDL.Nat,
   });
   const Bio__1 = IDL.Record({
-    'username' : IDL.Opt(IDL.Text),
+    'username' : IDL.Text,
     'email' : IDL.Opt(IDL.Text),
     'phone_number' : IDL.Opt(IDL.Text),
   });
   const User = IDL.Record({
-    'id' : IDL.Principal,
     'bio' : Bio__1,
     'updated_at' : IDL.Int,
     'created_at' : IDL.Int,
+    'callerid' : IDL.Principal,
   });
   const Result_2 = IDL.Variant({ 'ok' : Post, 'err' : Error });
   const Result_1 = IDL.Variant({ 'ok' : User, 'err' : Error });
   return IDL.Service({
     'activePost' : IDL.Func([IDL.Nat], [Result], []),
     'checkActivePost' : IDL.Func([IDL.Nat], [Result_3], []),
-    'createPost' : IDL.Func([Post_Info], [Result], []),
+    'createPost' : IDL.Func([IDL.Nat, Post_Info], [Result], []),
     'createUser' : IDL.Func([Bio], [Result], []),
     'deletePost' : IDL.Func([IDL.Nat], [Result], []),
-    'deleteUser' : IDL.Func([], [Result], []),
+    'deleteUser' : IDL.Func([IDL.Nat], [Result], []),
     'listPosts' : IDL.Func([], [IDL.Vec(Post)], []),
     'listUsers' : IDL.Func([], [IDL.Vec(User)], []),
     'readPost' : IDL.Func([IDL.Nat], [Result_2], []),
-    'readUser' : IDL.Func([], [Result_1], []),
+    'readUser' : IDL.Func([IDL.Nat], [Result_1], []),
     'updatePost' : IDL.Func([IDL.Nat, Post_Info], [Result], []),
-    'updateUser' : IDL.Func([Bio], [Result], []),
+    'updateUser' : IDL.Func([IDL.Nat, Bio], [Result], []),
   });
 };
 export const init = ({ IDL }) => { return []; };

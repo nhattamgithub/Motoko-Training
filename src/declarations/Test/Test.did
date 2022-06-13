@@ -1,8 +1,8 @@
 type User = 
  record {
    bio: Bio__1;
+   callerid: principal;
    created_at: int;
-   id: principal;
    updated_at: int;
  };
 type Result_3 = 
@@ -38,7 +38,7 @@ type Post_Info =
 type Post = 
  record {
    active: bool;
-   author: principal;
+   author: nat;
    created_at: int;
    info: Post_Info__1;
    updated_at: int;
@@ -55,25 +55,25 @@ type Bio__1 =
  record {
    email: opt text;
    phone_number: opt text;
-   username: opt text;
+   username: text;
  };
 type Bio = 
  record {
    email: opt text;
    phone_number: opt text;
-   username: opt text;
+   username: text;
  };
 service : {
   activePost: (nat) -> (Result);
   checkActivePost: (nat) -> (Result_3);
-  createPost: (Post_Info) -> (Result);
+  createPost: (nat, Post_Info) -> (Result);
   createUser: (Bio) -> (Result);
   deletePost: (nat) -> (Result);
-  deleteUser: () -> (Result);
+  deleteUser: (nat) -> (Result);
   listPosts: () -> (vec Post);
   listUsers: () -> (vec User);
   readPost: (nat) -> (Result_2);
-  readUser: () -> (Result_1);
+  readUser: (nat) -> (Result_1);
   updatePost: (nat, Post_Info) -> (Result);
-  updateUser: (Bio) -> (Result);
+  updateUser: (nat, Bio) -> (Result);
 }
