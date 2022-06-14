@@ -5,8 +5,8 @@ import Time "mo:base/Time";
 import Result "mo:base/Result";
 import Principal "mo:base/Principal";
 import Array "mo:base/Array";
-import Types "./train_models/Types";
-import State "./train_models/State";
+import Types "../train_models/Types";
+import State "../train_models/State";
 
 actor {
 
