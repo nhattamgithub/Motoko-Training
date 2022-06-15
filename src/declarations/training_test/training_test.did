@@ -1,29 +1,74 @@
 type User = 
  record {
    created_at: opt int;
-   email: text;
-   phone_number: text;
+   email: opt text;
+   phone_number: opt text;
    updated_at: opt int;
    username: text;
+ };
+type Result_5 = 
+ variant {
+   err: Error;
+   ok: bool;
+ };
+type Result_4 = 
+ variant {
+   err: Error;
+   ok: vec Post;
+ };
+type Result_3 = 
+ variant {
+   err: Error;
+   ok: vec User;
+ };
+type Result_2 = 
+ variant {
+   err: Error;
+   ok: Post;
  };
 type Result_1 = 
  variant {
    err: Error;
-   ok;
+   ok: User;
  };
 type Result = 
  variant {
    err: Error;
-   ok: User;
+   ok;
+ };
+type Post = 
+ record {
+   active: bool;
+   author: text;
+   body: opt text;
+   created_at: opt int;
+   title: opt text;
+   updated_at: opt int;
  };
 type Error = 
  variant {
    AlreadyActivePost;
    AlreadyExisting;
+   EmailAlreadyExisting;
+   IdNotVailid;
    NotAuthorized;
    NotFound;
+   PhoneNumberAlreadyExisting;
+   PostNotFound;
+   UserNotFound;
+   UsernameNotSpace;
  };
 service : {
-  createUser: (User) -> (Result_1);
-  readUser: () -> (Result);
+  activePost: (nat) -> (Result);
+  checkActivePost: (nat) -> (Result_5);
+  createPost: (Post) -> (Result);
+  createUser: (User) -> (Result);
+  deletePost: (nat) -> (Result);
+  deleteUser: (text) -> (Result);
+  listPost: () -> (Result_4);
+  listUser: () -> (Result_3);
+  readPost: (nat) -> (Result_2);
+  readUser: (text) -> (Result_1);
+  updatePost: (nat, Post) -> (Result);
+  updateUser: (text, User) -> (Result);
 }

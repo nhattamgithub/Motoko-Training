@@ -14,24 +14,11 @@ import Types "../training_test_models/Types";
 import Nat "mo:base/Nat";
 import Hash "mo:base/Hash";
 import Array "mo:base/Array";
+import Char "mo:base/Char";
 
 actor {
   var state : State.State = State.empty();
 
-  //Create ID users
-  private func create_id_user() : Nat {
-    var id : Nat = 0;
-    while (true){
-      let readUser = state.users.get(id);
-      if (readUser == null){
-        return id;
-      };
-      id += 1;
-    };
-    return 0;
-  };
-
-  
   // User
   //Create user
   public shared(msg) func createUser(user: Types.User): async Result.Result<(), Types.Error> {
@@ -39,104 +26,129 @@ actor {
     if (Principal.toText(callerID) == "2vxsx-fae"){
       return #err(#NotAuthorized);
     };
-
-    let id = create_id_user();
-
-    let readUser = state.users.get(id);
-    switch (readUser) {
-      case (? v){ 
-        #err(#AlreadyExisting);
-      };
-      case null {
-        let newUser : Types.User = {
-          username = user.username;
-          email = user.email;
-          phone_number = user.phone_number;
-          created_at : ?Int = Option.get(null, ?Time.now());
-          updated_at : ?Int = Option.get(null, ?Time.now());
+    if (check_space_text(user.username) == false) {
+      let id = user.username;
+      let readUser = state.users.get(id);
+      switch (readUser) {
+        case (? v){ 
+          #err(#AlreadyExisting);
         };
-        let createdUser = state.users.put(id, newUser);
-        #ok(());
+        case null {
+          let check : Result.Result<(), Types.Error> = check_user(user);
+          switch (check) {
+            case (#ok()){
+              let newUser : Types.User = {
+              username = user.username;
+              email = user.email;
+              phone_number = user.phone_number;
+              created_at : ?Int = Option.get(null, ?Time.now());
+              updated_at : ?Int = Option.get(null, ?Time.now());
+              };
+              let createdUser = state.users.put(id, newUser);
+              #ok(());
+            };
+            case (_){
+              return check;
+            }
+          };
+        };
       };
-    };
+    }
+    else {
+      #err(#UsernameNotSpace);
+    }
   };
 
   //Read user
-  public shared(msg) func readUser(id: Nat) : async Result.Result<Types.User, Types.Error> {
+  public shared(msg) func readUser(id: Text) : async Result.Result<Types.User, Types.Error> {
     let callerID = msg.caller;
     if (Principal.toText(callerID) == "2vxsx-fae") {
       return #err(#NotAuthorized);
     };
-
-    let result = state.users.get(id);
-    return Result.fromOption(result, #NotFound);
-  };
-
-  public func check_key() {
-    for (k in state.users.keys()){
-      Debug.print(debug_show(k));
-    };
+    if (check_space_text(id) == false){
+      let result = state.users.get(id);
+      return Result.fromOption(result, #NotFound);
+    }
+    else {
+      #err(#IdNotVailid);
+    }
   };
 
   // Update user
-  public shared(msg) func updateUser(id : Nat, user: Type.User) : async Result.Result<(), Types.Error> {
+  public shared(msg) func updateUser(id : Text, user: Type.User) : async Result.Result<(), Types.Error> {
     let callerID = msg.caller;
 
     if (Principal.toText(callerID) == "2vxsx-fae") {
       return #err(#NotAuthorized);
     };
 
-    let result = state.users.get(id);
+    if (check_space_text(id) == false){
+      let result = state.users.get(id);
 
-    switch (result) {
-      case null {
-        #err(#NotFound);
+      switch (result) {
+        case (null){ 
+          #err(#NotFound);
+        };
+        case (?value) {
+          let deleted = state.users.remove(id);
+          let check : Result.Result<(), Types.Error> = check_user(user);
+          switch (check) {
+            case (#ok()){
+              let updateUser : Types.User = {
+                username = user.username;
+                email = user.email;
+                phone_number = user.phone_number;
+                created_at : ?Int = Option.get(null, ?Time.now());
+                updated_at : ?Int = Option.get(null, ?Time.now());
+              };
+                let result_update = state.users.put(user.username, updateUser);
+                #ok();
+            };
+            case (_){
+              let result_update = state.users.put(id, value);
+              return check;
+            }
+          };
+        };
       };
-      case(?value) {
-        let updateUser : Types.User = {
-        username = user.username;
-        email = user.email;
-        phone_number = user.phone_number;
-        created_at : ?Int = Option.get(null, ?Time.now());
-        updated_at : ?Int = Option.get(null, ?Time.now());
-      };
-        let result_update = state.users.replace(id, updateUser);
-        #ok();
-      };
-    };
+    }
+    else {
+      #err(#IdNotVailid);
+    }
   };
 
   // Delete user
-  public shared(msg) func deleteUser(id: Nat) : async Result.Result<(), Types.Error> {
+  public shared(msg) func deleteUser(id: Text) : async Result.Result<(), Types.Error> {
     let callerID = msg.caller;
 
     if (Principal.toText(callerID) == "2vxsx-fae") {
       return #err(#NotAuthorized);
     };
 
-    let result = state.users.remove(id);
+    if (check_space_text(id) == false){
+      let result = state.users.remove(id);
 
-    switch (result) {
-      case (null) {
-        #err(#NotFound);
+      switch (result) {
+        case (null) {
+          #err(#NotFound);
+        };
+        case (?value) {
+          #ok();
+        };
       };
-      case (?value) {
-        #ok();
-      };
+    }
+    else {
+      #err(#IdNotVailid);
     };
   };
 
   //Create ID post
   private func create_id_post() : Nat {
     var id : Nat = 0;
-    while (true){
-      let readUser = state.posts.get(id);
-      if (readUser == null){
-        return id;
-      };
+    while (state.posts.get(id) != null){
       id += 1;
     };
-    return 0;
+    return id;
   };
   // Post
   // Create post
@@ -147,25 +159,25 @@ actor {
       return #err(#NotAuthorized);
     };
 
-    let id = create_id_post();
-    let readPost = state.posts.get(id);
-    switch (readPost) {
-      case (?value){
-        #err(#AlreadyExisting);
+    let find_user = state.users.get(post.author);
+
+    if (find_user != null){
+      let id = create_id_post();
+      let readPost = state.posts.get(id);
+      let newPost : Type.Post = {
+        title = post.title;
+        body = post.body;
+        author = post.author;
+        active = post.active;
+        created_at : ?Int = Option.get(null, ?Time.now());
+        updated_at : ?Int = Option.get(null, ?Time.now());
       };
-      case (nulll) {
-        let newPost : Type.Post = {
-          title = post.title;
-          body = post.body;
-          author = post.author;
-          active = post.active;
-          created_at : ?Int = Option.get(null, ?Time.now());
-          updated_at : ?Int = Option.get(null, ?Time.now());
-        };
-        let createPost = state.posts.put(id, newPost);
-        #ok();
-      };
-    };
+      let createPost = state.posts.put(id, newPost);
+      #ok();
+    }
+    else {
+      #err(#UserNotFound);
+    }
   };
 
   //Read post
@@ -180,6 +192,7 @@ actor {
     return Result.fromOption(result, #NotFound);
   };
 
+  
   // Update post
   public shared(msg) func updatePost(id: Nat, post: Types.Post) : async Result.Result<(), Types.Error>{
     let callerID = msg.caller;
@@ -187,24 +200,32 @@ actor {
     if (Principal.toText(callerID) == "2vxsx-fae") {
       return #err(#NotAuthorized);
     };
+    
+    let find_user = state.users.get(post.author);
 
     let result = state.posts.get(id);
 
     switch (result) {
       case null {
-        #err(#NotFound);
+        #err(#PostNotFound);
       };
       case (?value) {
-         let updatePost : Type.Post = {
-          title = post.title;
-          body = post.body;
-          author = post.author;
-          active = post.active;
-          created_at : ?Int = Option.get(null, ?Time.now());
-          updated_at : ?Int = Option.get(null, ?Time.now());
+        let find_user = state.users.get(post.author);
+        if (find_user != null) {
+          let updatePost : Type.Post = {
+            title = post.title;
+            body = post.body;
+            author = post.author;
+            active = post.active;
+            created_at : ?Int = Option.get(null, ?Time.now());
+            updated_at : ?Int = Option.get(null, ?Time.now());
+          };
+          let result_update = state.posts.replace(id, updatePost);
+          #ok();
+        }
+        else {
+          #err(#UserNotFound);
         };
-        let result_update = state.posts.replace(id, updatePost);
-        #ok();
       };
     };
   };
@@ -310,8 +331,8 @@ actor {
 
     let user_null : Types.User = {
       username = "";
-      email = "";
-      phone_number = "";
+      email = null;
+      phone_number = null;
       created_at = null;
       updated_at = null;
     };
@@ -332,19 +353,10 @@ actor {
     if (Principal.toText(callerID) == "2vxsx-fae") {
       return #err(#NotAuthorized);
     };
-
-    let user_null : Types.User = {
-      username = "";
-      email = "";
-      phone_number = "";
-      created_at = null;
-      updated_at = null;
-    };
-
     let post_null : Types.Post = {
       title = null;
       body = null;
-      author = user_null;
+      author = "";
       active = false;
       created_at = null;
       updated_at = null;
@@ -359,4 +371,88 @@ actor {
     };
     #ok(Array.freeze<Types.Post>(list_post));
   };
-};
+
+  private func check_space_text(username: Text) : Bool {
+    let check : Bool = (Text.contains(username, #char ' '));
+    return check;
+  };
+
+  private func check_user(user: Types.User) : Result.Result<(), Types.Error> {
+    let email : ?Text = user.email;
+    let phone_number : ?Text = user.phone_number;
+    var m = check_email(email);
+    var p = check_phone_number(phone_number);
+    if (m != #ok()){
+      return m;
+    }
+    else if (p != #ok()){
+      return p;
+    };
+    for (value in state.users.vals()){
+      if (email != null and value.email == email){
+        return #err(#EmailAlreadyExisting);
+      };
+      if (phone_number != null and value.phone_number == phone_number){
+        return #err(#PhoneNumberAlreadyExisting);
+      };
+    };   
+    return #ok();
+  };
+
+  private func check_email(mail : ?Text) : Result.Result<(), Types.Error> {
+    switch (mail) {
+      case null #ok();
+      case (?mail) {
+        var at = -1;
+        var count_at = 0;
+        var dot = -1;
+        let array : [Char] = Iter.toArray(mail.chars());
+        var size : Nat = mail.size();
+        if (size < 6){
+          return #err(#EmailNotValid);
+        };
+        for (i in Iter.range(1, size-1)){
+          if (array[i] == '@'){
+            at := i;
+            count_at += 1;
+          };
+          if ((array[i] == '.' and count_at == 0)) {
+            return #err(#EmailNotValid);
+          };
+          if (array[i] == '.'){
+            dot := i;
+          };
+        };
+        if (at > dot 
+          or Char.isAlphabetic(array[0]) == false 
+          or count_at != 1
+          or Text.contains(mail, #text "@.")
+          or Text.endsWith(mail, #char '.')){
+          #err(#EmailNotValid);
+        }
+        else {
+          #ok();
+        };
+      };
+    };
+  };
+
+  private func check_phone_number (phone: ?Text) : Result.Result<(), Types.Error> {
+    switch (phone) {
+      case null return #ok;
+      case (?phone) {
+        let array_phone : [Char] = Iter.toArray(phone.chars());
+        var size : Nat = array_phone.size();
+        if (size != 10){
+          return #err(#PhoneNumberNotValid);
+        };
+        for (i in Iter.range(0, size -1)){
+          if (Char.isDigit(array_phone[i]) == false){
+            return #err(#PhoneNumberNotValid);
+          };
+        };
+      };
+    };
+    #ok();
+  };
+}
