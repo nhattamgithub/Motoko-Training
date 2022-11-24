@@ -6,10 +6,15 @@ type User =
    updated_at: opt int;
    username: text;
  };
-type Result = 
+type Result_1 = 
  variant {
    err: Error;
    ok;
+ };
+type Result = 
+ variant {
+   err: Error;
+   ok: User;
  };
 type Error = 
  variant {
@@ -18,5 +23,6 @@ type Error =
    NotFound;
  };
 service : {
-  createUser: (User) -> (Result);
+  createUser: (User) -> (Result_1);
+  readUser: () -> (Result);
 }

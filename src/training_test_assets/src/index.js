@@ -1,19 +1,17 @@
-import { training_test } from "../../declarations/training_test";
 
-document.querySelector("form").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const button = e.target.querySelector("button");
+import React from 'react';
+import ReactDOM from 'react-dom';
+import {
+  BrowserRouter
+} from 'react-router-dom';
 
-  const name = document.getElementById("name").value.toString();
-
-  button.setAttribute("disabled", true);
-
-  // Interact with foo actor, calling the greet method
-  const greeting = await training_test.greet(name);
-
-  button.removeAttribute("disabled");
-
-  document.getElementById("greeting").innerText = greeting;
-
-  return false;
-});
+import { App } from './App';
+import './App.css';
+import { createRoot } from 'react-dom/client';
+const container = document.getElementById('app');
+const root = createRoot(container); // createRoot(container!) if you use TypeScript
+root.render(
+  <BrowserRouter>
+    <App/>
+  </BrowserRouter>
+);

@@ -3,6 +3,7 @@ const webpack = require("webpack");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
 const CopyPlugin = require("copy-webpack-plugin");
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 function initCanisterEnv() {
   let localCanisters, prodCanisters;
@@ -68,6 +69,7 @@ module.exports = {
   output: {
     filename: "index.js",
     path: path.join(__dirname, "dist", frontendDirectory),
+    publicPath: '/'
   },
 
   // Depending in the language or framework you are using for
@@ -81,7 +83,27 @@ module.exports = {
   //    { test: /\.css$/, use: ['style-loader','css-loader'] }
   //  ]
   // },
+  module: {
+    rules: [
+      {
+          test: /\.(js|jsx)$/,
+          exclude: /node_modules/,
+          use: {
+              loader: 'babel-loader'
+          }
+      },
+      {
+          test: /\.scss$/,
+          use: [
+              MiniCssExtractPlugin.loader,
+              'css-loader',
+              'sass-loader',
+          ],
+      }
+    ]
+  },
   plugins: [
+    new MiniCssExtractPlugin(),
     new HtmlWebpackPlugin({
       template: path.join(__dirname, asset_entry),
       cache: false,
@@ -105,6 +127,7 @@ module.exports = {
   ],
   // proxy /api to port 8000 during development
   devServer: {
+    historyApiFallback: true,
     proxy: {
       "/api": {
         target: "http://localhost:8000",
